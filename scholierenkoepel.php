@@ -79,23 +79,43 @@ function scholierenkoepel_civicrm_managed(&$entities) {
 function scholierenkoepel_civicrm_buildForm($formName, &$form) {
 require_once 'api/api.php';
 
-if ($formName == 'CRM_Event_Form_Registration_Confirm' || $formName == 'CRM_Event_Form_Registration_ThankYou') {
-}
-if ($formName == 'CRM_Event_Form_Registration_Register') {
+  if ($formName == 'CRM_Event_Form_Registration_Confirm' || $formName == 'CRM_Event_Form_Registration_ThankYou') {
+  }
+  if ($formName == 'CRM_Event_Form_Registration_Register') {
+
+
+  }
+  if( $formName == 'CRM_Event_Form_ManageEvent_Registration' ) {
+      $form->addElement( 'checkbox', 'is_sk', ts( 'Gebruik registratie SK' ) );
+      $eventID = $form->_id;
+      $is_sk = null;
+      $is_multiple = null;
+      $is_enhanced = CRM_Core_DAO::singleValueQuery( "SELECT is_sk FROM civicrm_event_sk WHERE event_id = $eventID" );
+      $is_multiple = CRM_Core_DAO::singleValueQuery( "SELECT is_multiple_registrations FROM civicrm_event WHERE id = $eventID" );
+      $defaults['is_sk'] = $is_sk;
+      $defaults['is_multiple_registrations'] = $is_multiple;
+      $form->setDefaults( $defaults );
+  }
 
 
 }
-if( $formName == 'CRM_Event_Form_ManageEvent_Registration' ) {
-    $form->addElement( 'checkbox', 'is_sk', ts( 'Gebruik registratie SK' ) );
-    $eventID = $form->_id;
-    $is_sk = null;
-    $is_multiple = null;
-    $is_enhanced = CRM_Core_DAO::singleValueQuery( "SELECT is_sk FROM civicrm_event_sk WHERE event_id = $eventID" );
-    $is_multiple = CRM_Core_DAO::singleValueQuery( "SELECT is_multiple_registrations FROM civicrm_event WHERE id = $eventID" );
-    $defaults['is_enhanced'] = $is_enhanced;
-    $defaults['is_multiple_registrations'] = $is_multiple;
-    $form->setDefaults( $defaults );
+
+function scholierenkoepel_civicrm_postProcess( $formName, &$form  ) {
+
+  if( $formName == 'CRM_Event_Form_ManageEvent_Registration' ) {
+    $eventId = $form->_id;
+    $issk = $form->_submitValues['is_enhanced'];
+    if( !$issk ) {
+      $issk = 0;
+    }
+    if( $issk ) {
+      $isSK = CRM_Core_DAO::singleValueQuery( "SELECT id FROM civicrm_event_sk WHERE event_id = $eventId" );
+      if (!empty($isEnhanced) ) {
+
+      } else {
+        CRM_Core_DAO::executeQuery( "INSERT INTO civicrm_event_sk( id, event_id, is_sk ) values( null,'$eventId','$issk' )" );
+      }
+    }
+  }
 }
 
-
-}
