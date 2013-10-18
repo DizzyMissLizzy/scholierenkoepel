@@ -94,17 +94,67 @@ require_once 'api/api.php';
       $is_multiple = CRM_Core_DAO::singleValueQuery( "SELECT is_multiple_registrations FROM civicrm_event WHERE id = $eventID" );
       $defaults['is_sk'] = $is_sk;
       $defaults['is_multiple_registrations'] = $is_multiple;
+
       $form->setDefaults( $defaults );
+
+      //Profile Chooser
+    require_once 'CRM/Core/BAO/UFGroup.php';
+    require_once 'CRM/Contact/BAO/ContactType.php';
+    $types = array_merge(array('Contact', 'Individual', 'Participant', 'Organization'),
+                         CRM_Contact_BAO_ContactType::subTypes('Individual')
+                         );
+    $profiles = CRM_Core_BAO_UFGroup::getProfiles($types);
+    $mainProfiles = array(
+                          '' => ts('- select -')) + $profiles;
+     CRM_Core_error::debug('description', $mainProfiles);
   }
+}
 
+function scholierenkoepel_civicrm_validate( $formName, &$fields, &$files, &$form )  {
 
+  if( $formName == 'CRM_Event_Form_ManageEvent_Registration' ) {
+    $eventId = $form->_id;
+    $isenhanced = $form->_submitValues['is_sk'];
+    if ($isenhanced) {
+      //check that the selected profiles have either firstname+lastname or email required
+      $profileIds = array(
+        CRM_Utils_Array::value('custom_pre_id', $form->_submitValues),
+        CRM_Utils_Array::value('custom_post_id', $form->_submitValues),
+      );
+      $additionalProfileIds = array(
+        CRM_Utils_Array::value('additional_custom_pre_id', $form->_submitValues),
+        CRM_Utils_Array::value('additional_custom_post_id', $form->_submitValues),
+      );
+
+      //additional profile fields default to main if not set
+      if (!is_numeric($additionalProfileIds[0])) {
+        $additionalProfileIds[0] = $profileIds[0];
+      }
+      if (!is_numeric($additionalProfileIds[1])) {
+        $additionalProfileIds[1] = $profileIds[1];
+      }
+
+      //add multiple profiles if set
+      CRM_Event_Form_ManageEvent_Registration::addMultipleProfiles($profileIds, $form->_submitValues, 'custom_post_id_multiple');
+      CRM_Event_Form_ManageEvent_Registration::addMultipleProfiles($additionalProfileIds, $form->_submitValues, 'additional_custom_post_id_multiple');
+
+      $isProfileComplete = isProfileComplete($profileIds);
+      $isAdditionalProfileComplete = isProfileComplete($additionalProfileIds);
+      if (!$isProfileComplete) {
+        $errors['custom_pre_id'] = ts("Please include a Profile for online registration that contains a First Name + Last Name fields.");
+      }
+      if (!$isAdditionalProfileComplete) {
+        $errors['additional_custom_pre_id'] = ts("Please include a Profile for online registration of additional participants that contains a First Name + Last Name fields.");
+      }
+    }
+  }
 }
 
 function scholierenkoepel_civicrm_postProcess( $formName, &$form  ) {
 
   if( $formName == 'CRM_Event_Form_ManageEvent_Registration' ) {
     $eventId = $form->_id;
-    $issk = $form->_submitValues['is_enhanced'];
+    $issk = $form->_submitValues['is_sk'];
     if( !$issk ) {
       $issk = 0;
     }
