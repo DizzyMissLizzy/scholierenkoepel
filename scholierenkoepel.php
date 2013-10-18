@@ -86,7 +86,16 @@ if ($formName == 'CRM_Event_Form_Registration_Register') {
 
 }
 if( $formName == 'CRM_Event_Form_ManageEvent_Registration' ) {
-  }
+    $form->addElement( 'checkbox', 'is_sk', ts( 'Gebruik registratie SK' ) );
+    $eventID = $form->_id;
+    $is_sk = null;
+    $is_multiple = null;
+    $is_enhanced = CRM_Core_DAO::singleValueQuery( "SELECT is_sk FROM civicrm_event_sk WHERE event_id = $eventID" );
+    $is_multiple = CRM_Core_DAO::singleValueQuery( "SELECT is_multiple_registrations FROM civicrm_event WHERE id = $eventID" );
+    $defaults['is_enhanced'] = $is_enhanced;
+    $defaults['is_multiple_registrations'] = $is_multiple;
+    $form->setDefaults( $defaults );
+}
 
 
 }
