@@ -22,6 +22,10 @@ function scholierenkoepel_civicrm_xmlMenu(&$files) {
  * Implementation of hook_civicrm_install
  */
 function scholierenkoepel_civicrm_install() {
+  $dirRoot =dirname( __FILE__ );
+  $dirSQL = $dirRoot . DIRECTORY_SEPARATOR .'sql/scholierenkoepel.install.sql';
+  CRM_Utils_File::sourceSQLFile( CIVICRM_DSN, $dirSQL );
+  CRM_Core_Invoke::rebuildMenuAndCaches( );
   return _scholierenkoepel_civix_civicrm_install();
 }
 
@@ -29,6 +33,9 @@ function scholierenkoepel_civicrm_install() {
  * Implementation of hook_civicrm_uninstall
  */
 function scholierenkoepel_civicrm_uninstall() {
+  $dirRoot =dirname( __FILE__ );
+  $dirSQL = $dirRoot . DIRECTORY_SEPARATOR .'sql/scholierenkoepel.uninstall.sql';
+  CRM_Utils_File::sourceSQLFile( CIVICRM_DSN, $dirSQL );
   return _scholierenkoepel_civix_civicrm_uninstall();
 }
 
@@ -67,4 +74,19 @@ function scholierenkoepel_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  */
 function scholierenkoepel_civicrm_managed(&$entities) {
   return _scholierenkoepel_civix_civicrm_managed($entities);
+}
+
+function scholierenkoepel_civicrm_buildForm($formName, &$form) {
+require_once 'api/api.php';
+
+if ($formName == 'CRM_Event_Form_Registration_Confirm' || $formName == 'CRM_Event_Form_Registration_ThankYou') {
+}
+if ($formName == 'CRM_Event_Form_Registration_Register') {
+
+
+}
+if( $formName == 'CRM_Event_Form_ManageEvent_Registration' ) {
+  }
+
+
 }
